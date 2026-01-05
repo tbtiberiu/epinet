@@ -5,15 +5,14 @@ Created on Fri Mar 23 17:56:02 2018
 @author: shinyonsei2
 """
 
-'''
+"""
 Load a PFM file into a Numpy array. Note that it will have
 a shape of H x W, not W x H. Returns a tuple containing the
 loaded image and the scale factor from the file.
-'''
-import numpy as np
+"""
 import sys
-import re
 
+import numpy as np
 
 ############################################################################
 #  This file is part of the 4D Light Field Benchmark.                      #
@@ -43,8 +42,9 @@ import re
 #    }                                                                     #
 #                                                                          #
 ############################################################################
-    
-def write_pfm(data, fpath, scale=1, file_identifier=b'Pf', dtype="float32"):
+
+
+def write_pfm(data, fpath, scale=1, file_identifier=b"Pf", dtype="float32"):
     # PFM format definition: http://netpbm.sourceforge.net/doc/pfm.html
 
     data = np.flipud(data)
@@ -53,42 +53,46 @@ def write_pfm(data, fpath, scale=1, file_identifier=b'Pf', dtype="float32"):
     endianess = data.dtype.byteorder
     print(endianess)
 
-    if endianess == '<' or (endianess == '=' and sys.byteorder == 'little'):
+    if endianess == "<" or (endianess == "=" and sys.byteorder == "little"):
         scale *= -1
 
-    with open(fpath, 'wb') as file:
+    with open(fpath, "wb") as file:
         file.write((file_identifier))
-        file.write(('\n%d %d\n' % (width, height)).encode())
-        file.write(('%d\n' % scale).encode())
+        file.write(("\n%d %d\n" % (width, height)).encode())
+        file.write(("%d\n" % scale).encode())
 
         file.write(values)
-        
 
-        
+
 def read_pfm(fpath, expected_identifier="Pf"):
     # PFM format definition: http://netpbm.sourceforge.net/doc/pfm.html
-    
+
     def _get_next_line(f):
-        next_line = f.readline().decode('utf-8').rstrip()
+        next_line = f.readline().decode("utf-8").rstrip()
         # ignore comments
-        while next_line.startswith('#'):
+        while next_line.startswith("#"):
             next_line = f.readline().rstrip()
         return next_line
-    
-    with open(fpath, 'rb') as f:
+
+    with open(fpath, "rb") as f:
         #  header
         identifier = _get_next_line(f)
         if identifier != expected_identifier:
-            raise Exception('Unknown identifier. Expected: "%s", got: "%s".' % (expected_identifier, identifier))
+            raise Exception(
+                'Unknown identifier. Expected: "%s", got: "%s".'
+                % (expected_identifier, identifier)
+            )
 
         try:
             line_dimensions = _get_next_line(f)
-            dimensions = line_dimensions.split(' ')
+            dimensions = line_dimensions.split(" ")
             width = int(dimensions[0].strip())
             height = int(dimensions[1].strip())
         except:
-            raise Exception('Could not parse dimensions: "%s". '
-                            'Expected "width height", e.g. "512 512".' % line_dimensions)
+            raise Exception(
+                'Could not parse dimensions: "%s". '
+                'Expected "width height", e.g. "512 512".' % line_dimensions
+            )
 
         try:
             line_scale = _get_next_line(f)
@@ -99,8 +103,10 @@ def read_pfm(fpath, expected_identifier="Pf"):
             else:
                 endianness = ">"
         except:
-            raise Exception('Could not parse max value / endianess information: "%s". '
-                            'Should be a non-zero number.' % line_scale)
+            raise Exception(
+                'Could not parse max value / endianess information: "%s". '
+                "Should be a non-zero number." % line_scale
+            )
 
         try:
             data = np.fromfile(f, "%sf" % endianness)
@@ -109,6 +115,9 @@ def read_pfm(fpath, expected_identifier="Pf"):
             with np.errstate(invalid="ignore"):
                 data *= abs(scale)
         except:
-            raise Exception('Invalid binary values. Could not create %dx%d array from input.' % (height, width))
+            raise Exception(
+                "Invalid binary values. Could not create %dx%d array from input."
+                % (height, width)
+            )
 
         return data
