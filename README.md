@@ -26,7 +26,7 @@ Recommended to use a virtual environment using uv (https://uv.run/):
  And run `uv run EPINET_train.py`
 
  - Checkpoint files will be saved in 'models/checkpoints/iterXXX_XX.hdf5', it could be used for test EPINET model.
- - Training process will be saved 'results/EPINET_train/train_XX.jpg'. (XX is iteration number).
+ - Training process will be saved 'results/epinet_validation/train_XX.jpg'. (XX is iteration number).
  - You might be change the setting 'learning rate','patch_size' and so on to get better result.
 
 # Test the EPINET
