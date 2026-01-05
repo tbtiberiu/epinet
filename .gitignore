@@ -100,8 +100,8 @@ ENV/
 # mypy
 .mypy_cache/
 
-hci_dataset/additional
-hci_dataset/stratified
-hci_dataset/test
-hci_dataset/training
-hci_dataset/license.txt
+data/hci_dataset/additional
+data/hci_dataset/stratified
+data/hci_dataset/test
+data/hci_dataset/training
+data/hci_dataset/license.txt

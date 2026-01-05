@@ -11,14 +11,14 @@ from typing import List
 
 import numpy as np
 
-from epinet_fun.func_epinetmodel import define_epinet
-from epinet_fun.func_generate_traindata import (
+from utils.func_epinetmodel import define_epinet
+from utils.func_generate_traindata import (
     data_augmentation_for_train,
     generate_traindata512,
     generate_traindata_for_train,
 )
-from epinet_fun.func_savedata import display_current_output
-from epinet_fun.util import load_LFdata
+from utils.func_savedata import display_current_output
+from utils.util import load_LFdata
 
 
 # --- Configuration ---
@@ -45,8 +45,8 @@ class TrainingConfig:
     load_weights: bool = False
 
     # Directories
-    base_ckpt_dir: str = "epinet_checkpoints"
-    base_out_dir: str = "epinet_output"
+    base_ckpt_dir: str = "models"
+    base_out_dir: str = "results"
 
     # Dataset Paths
     train_dirs: List[str] = field(

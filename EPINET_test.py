@@ -48,14 +48,14 @@ import time
 import matplotlib.pyplot as plt
 import numpy as np
 
-from epinet_fun.func_epinetmodel import define_epinet
-from epinet_fun.func_makeinput import make_multiinput
-from epinet_fun.func_pfm import write_pfm
+from utils.func_epinetmodel import define_epinet
+from utils.func_makeinput import make_multiinput
+from utils.func_pfm import write_pfm
 
 if __name__ == "__main__":
     # Input : input_Cam000-080.png
     # Depth output : image_name.pfm
-    dir_output = "epinet_output"
+    dir_output = "results"
     if not os.path.exists(dir_output):
         os.makedirs(dir_output)
 
@@ -74,12 +74,15 @@ if __name__ == "__main__":
     # Setting01_LFdir = "Lytro"
 
     if Setting01_LFdir == "synthetic":
-        dir_LFimages = ["hci_dataset/training/dino", "hci_dataset/training/cotton"]
+        dir_LFimages = [
+            "data/hci_dataset/training/dino",
+            "data/hci_dataset/training/cotton",
+        ]
         image_width = 512
         image_height = 512
 
     elif Setting01_LFdir == "Lytro":
-        dir_LFimages = ["lytro/2067"]
+        dir_LFimages = ["data/lytro/2067"]
         image_width = 552
         image_height = 383
 
@@ -129,12 +132,10 @@ if __name__ == "__main__":
     ]  # number of views ( 0~8 for 9x9 )
 
     if len(Setting02_AngualrViews) == 5:
-        path_weight = "epinet_checkpoints/pretrained_5x5.hdf5"  # sample weight.
+        path_weight = "models/pretrained_5x5.hdf5"  # sample weight.
     if len(Setting02_AngualrViews) == 9:
-        path_weight = "epinet_checkpoints/pretrained_9x9.hdf5"  # sample weight.
-    path_weight = (
-        "epinet_checkpoints/EPINET_train_ckp/iter0002_trainmse9.728_bp38.80.keras"
-    )
+        path_weight = "models/pretrained_9x9.hdf5"  # sample weight.
+    path_weight = "models/checkpoints/iter0002_trainmse9.728_bp38.80.keras"
 
     img_scale = 1  #   1 for small_baseline(default) <3.5px,
     # 0.5 for large_baseline images   <  7px
