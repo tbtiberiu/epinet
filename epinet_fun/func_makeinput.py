@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Created on Thu Apr  5 13:38:16 2018
 
@@ -9,8 +8,10 @@ import imageio
 import numpy as np
 
 
-def make_epiinput(image_path, seq1, image_h, image_w, view_n, RGB):
-    traindata_tmp = np.zeros((1, image_h, image_w, len(view_n)), dtype=np.float32)
+def make_epiinput(image_path, seq1, image_height, image_width, view_n, RGB):
+    traindata_tmp = np.zeros(
+        (1, image_height, image_width, len(view_n)), dtype=np.float32
+    )
     i = 0
     if len(image_path) == 1:
         image_path = image_path[0]
@@ -24,8 +25,10 @@ def make_epiinput(image_path, seq1, image_h, image_w, view_n, RGB):
     return traindata_tmp
 
 
-def make_epiinput_lytro(image_path, seq1, image_h, image_w, view_n, RGB):
-    traindata_tmp = np.zeros((1, image_h, image_w, len(view_n)), dtype=np.float32)
+def make_epiinput_lytro(image_path, seq1, image_height, image_width, view_n, RGB):
+    traindata_tmp = np.zeros(
+        (1, image_height, image_width, len(view_n)), dtype=np.float32
+    )
 
     i = 0
     if len(image_path) == 1:
@@ -46,7 +49,7 @@ def make_epiinput_lytro(image_path, seq1, image_h, image_w, view_n, RGB):
     return traindata_tmp
 
 
-def make_multiinput(image_path, image_h, image_w, view_n):
+def make_multiinput(image_path, image_height, image_width, view_n):
     RGB = [0.299, 0.587, 0.114]  ## RGB to Gray // 0.299 0.587 0.114
 
     """ data from http://hci-lightfield.iwr.uni-heidelberg.de/
@@ -80,17 +83,31 @@ def make_multiinput(image_path, image_h, image_w, view_n):
     )  # -45degree:  [0, 10, 20, 30, 40, 50, 60, 70, 80]
 
     if image_path[:12] == "hci_dataset/":
-        val_90d = make_epiinput(image_path, seq90d, image_h, image_w, view_n, RGB)
-        val_0d = make_epiinput(image_path, seq0d, image_h, image_w, view_n, RGB)
-        val_45d = make_epiinput(image_path, seq45d, image_h, image_w, view_n, RGB)
-        val_M45d = make_epiinput(image_path, seqM45d, image_h, image_w, view_n, RGB)
+        val_90d = make_epiinput(
+            image_path, seq90d, image_height, image_width, view_n, RGB
+        )
+        val_0d = make_epiinput(
+            image_path, seq0d, image_height, image_width, view_n, RGB
+        )
+        val_45d = make_epiinput(
+            image_path, seq45d, image_height, image_width, view_n, RGB
+        )
+        val_M45d = make_epiinput(
+            image_path, seqM45d, image_height, image_width, view_n, RGB
+        )
 
     elif image_path[:5] == "lytro":
-        val_90d = make_epiinput_lytro(image_path, seq90d, image_h, image_w, view_n, RGB)
-        val_0d = make_epiinput_lytro(image_path, seq0d, image_h, image_w, view_n, RGB)
-        val_45d = make_epiinput_lytro(image_path, seq45d, image_h, image_w, view_n, RGB)
+        val_90d = make_epiinput_lytro(
+            image_path, seq90d, image_height, image_width, view_n, RGB
+        )
+        val_0d = make_epiinput_lytro(
+            image_path, seq0d, image_height, image_width, view_n, RGB
+        )
+        val_45d = make_epiinput_lytro(
+            image_path, seq45d, image_height, image_width, view_n, RGB
+        )
         val_M45d = make_epiinput_lytro(
-            image_path, seqM45d, image_h, image_w, view_n, RGB
+            image_path, seqM45d, image_height, image_width, view_n, RGB
         )
 
     return val_90d, val_0d, val_45d, val_M45d

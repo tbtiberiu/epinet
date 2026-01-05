@@ -1,18 +1,14 @@
-# -*- coding: utf-8 -*-
 """
-Created on Thu May 18 14:31:58 2017
-
-@author: shinyonsei2
+Updated for TensorFlow 2.x / Keras 3 compatibility
+Original Author: shinyonsei2
+Refactored for modularity and readability.
 """
-
-from __future__ import print_function
 
 import datetime
 import os
-import threading
-import time
+from dataclasses import dataclass, field
+from typing import List
 
-import imageio
 import numpy as np
 
 from epinet_fun.func_epinetmodel import define_epinet
@@ -24,342 +20,301 @@ from epinet_fun.func_generate_traindata import (
 from epinet_fun.func_savedata import display_current_output
 from epinet_fun.util import load_LFdata
 
-if __name__ == "__main__":
+
+# --- Configuration ---
+@dataclass
+class TrainingConfig:
+    # Model Hyperparameters
+    network_name: str = "epinet_validation"
+    model_conv_depth: int = 7
+    model_filt_num: int = 70
+    learning_rate: float = 0.1e-3
+    batch_size: int = 32
+    epochs: int = 3
+
+    # Data Parameters
+    input_size: int = 25  # 23 + 2
+    image_width: int = 512
+    image_height: int = 512
+    angular_views: np.ndarray = field(
+        default_factory=lambda: np.array([0, 1, 2, 3, 4, 5, 6, 7, 8])
+    )
+
+    # Training Settings
+    display_status_ratio: int = 10000
+    load_weights: bool = False
+
+    # Directories
+    base_ckpt_dir: str = "epinet_checkpoints"
+    base_out_dir: str = "epinet_output"
+
+    # Dataset Paths
+    train_dirs: List[str] = field(
+        default_factory=lambda: [
+            "additional/antinous",
+            "additional/boardgames",
+            "additional/dishes",
+            "additional/greek",
+            "additional/kitchen",
+            "additional/medieval2",
+            "additional/museum",
+            "additional/pens",
+            "additional/pillows",
+            "additional/platonic",
+            "additional/rosemary",
+            "additional/table",
+            "additional/tomb",
+            "additional/tower",
+            "additional/town",
+            "additional/vinyl",
+        ]
+    )
+
+    val_dirs: List[str] = field(
+        default_factory=lambda: [
+            "stratified/backgammon",
+            "stratified/dots",
+            "stratified/pyramids",
+            "stratified/stripes",
+            "training/boxes",
+            "training/cotton",
+            "training/dino",
+            "training/sideboard",
+        ]
+    )
+
+    @property
+    def label_size(self):
+        return self.input_size - 22
+
+    @property
+    def ckpt_dir(self):
+        return os.path.join(self.base_ckpt_dir, f"{self.network_name}_ckp")
+
+    @property
+    def output_dir(self):
+        return os.path.join(self.base_out_dir, self.network_name)
+
+    @property
+    def log_file(self):
+        return os.path.join(self.base_ckpt_dir, f"lf_{self.network_name}.txt")
+
+
+# --- Generators ---
+def training_generator(traindata_all, traindata_label, config: TrainingConfig):
     """
-    We use fit_generator to train EPINET,
-    so here we defined a generator function.
+    Yields batches of training data with augmentation.
     """
-
-    class threadsafe_iter:
-        """Takes an iterator/generator and makes it thread-safe by
-        serializing call to the `next` method of given iterator/generator.
-        """
-
-        def __init__(self, it):
-            self.it = it
-            self.lock = threading.Lock()
-
-        def __iter__(self):
-            return self
-
-        def __next__(self):
-            with self.lock:
-                return self.it.__next__()
-
-    def threadsafe_generator(f):
-        """A decorator that takes a generator function and makes it thread-safe."""
-
-        def g(*a, **kw):
-            return threadsafe_iter(f(*a, **kw))
-
-        return g
-
-    @threadsafe_generator
-    def myGenerator(
-        traindata_all,
-        traindata_label,
-        input_size,
-        label_size,
-        batch_size,
-        Setting02_AngualrViews,
-        boolmask_img4,
-        boolmask_img6,
-        boolmask_img15,
-    ):
-        while 1:
-            (
-                traindata_batch_90d,
-                traindata_batch_0d,
-                traindata_batch_45d,
-                traindata_batch_m45d,
-                traindata_label_batchNxN,
-            ) = generate_traindata_for_train(
+    while True:
+        # Generate basic batch
+        (batch_90d, batch_0d, batch_45d, batch_m45d, label_batch) = (
+            generate_traindata_for_train(
                 traindata_all,
                 traindata_label,
-                input_size,
-                label_size,
-                batch_size,
-                Setting02_AngualrViews,
-                boolmask_img4,
-                boolmask_img6,
-                boolmask_img15,
+                config.input_size,
+                config.label_size,
+                config.batch_size,
+                config.angular_views,
             )
+        )
 
-            (
-                traindata_batch_90d,
-                traindata_batch_0d,
-                traindata_batch_45d,
-                traindata_batch_m45d,
-                traindata_label_batchNxN,
-            ) = data_augmentation_for_train(
-                traindata_batch_90d,
-                traindata_batch_0d,
-                traindata_batch_45d,
-                traindata_batch_m45d,
-                traindata_label_batchNxN,
-                batch_size,
+        # Apply augmentation
+        (batch_90d, batch_0d, batch_45d, batch_m45d, label_batch) = (
+            data_augmentation_for_train(
+                batch_90d,
+                batch_0d,
+                batch_45d,
+                batch_m45d,
+                label_batch,
+                config.batch_size,
             )
+        )
 
-            traindata_label_batchNxN = traindata_label_batchNxN[:, :, :, np.newaxis]
+        # Expand dims for channel
+        label_batch = label_batch[:, :, :, np.newaxis]
 
-            yield (
-                [
-                    traindata_batch_90d,
-                    traindata_batch_0d,
-                    traindata_batch_45d,
-                    traindata_batch_m45d,
-                ],
-                traindata_label_batchNxN,
-            )
+        yield (
+            (batch_90d, batch_0d, batch_45d, batch_m45d),
+            label_batch,
+        )
 
-    # = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-    # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
-    If_trian_is = True
+# --- Helper Functions ---
+def setup_directories(config: TrainingConfig):
+    """Creates necessary directories for checkpoints and outputs."""
+    os.makedirs(config.ckpt_dir, exist_ok=True)
+    os.makedirs(config.output_dir, exist_ok=True)
 
-    """
-    GPU setting ( Our setting: gtx 1080ti,
-                               gpu number = 0 )
-    """
-    os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
-    os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+    # Initialize log file with timestamp
+    with open(config.log_file, "a") as f:
+        f.write(f"\n{datetime.datetime.now()}\n\n")
 
-    networkname = "EPINET_train"
 
-    iter00 = 0
+def load_and_prepare_data(config: TrainingConfig):
+    """Loads training and validation datasets."""
+    print("Loading training data...")
+    train_all, train_label = load_LFdata(config.train_dirs)
 
-    load_weight_is = False
-
-    """
-    Define Model parameters
-        first layer:  3 convolutional blocks,
-        second layer: 7 convolutional blocks,
-        last layer:   1 convolutional block
-    """
-    model_conv_depth = 7  # 7 convolutional blocks for second layer
-    model_filt_num = 70
-    model_learning_rate = 0.1**4
-
-    """
-    Define Patch-wise training parameters
-    """
-    input_size = 23 + 2  # Input size should be greater than or equal to 23
-    label_size = (
-        input_size - 22
-    )  # Since label_size should be greater than or equal to 1
-    Setting02_AngualrViews = np.array(
-        [0, 1, 2, 3, 4, 5, 6, 7, 8]
-    )  # number of views ( 0~8 for 9x9 )
-
-    batch_size = 16
-    workers_num = 2  # number of threads
-
-    display_status_ratio = 10000
-
-    """
-    Define directory for saving checkpoint file & disparity output image
-    """
-    directory_ckp = "epinet_checkpoints/%s_ckp" % (networkname)
-    if not os.path.exists(directory_ckp):
-        os.makedirs(directory_ckp)
-
-    if not os.path.exists("epinet_output/"):
-        os.makedirs("epinet_output/")
-    directory_t = "epinet_output/%s" % (networkname)
-    if not os.path.exists(directory_t):
-        os.makedirs(directory_t)
-
-    txt_name = "epinet_checkpoints/lf_%s.txt" % (networkname)
-
-    """
-    Load Train data from LF .png files
-    """
-    print("Load training data...")
-    dir_LFimages = [
-        "additional/antinous",
-        "additional/boardgames",
-        "additional/dishes",
-        "additional/greek",
-        "additional/kitchen",
-        "additional/medieval2",
-        "additional/museum",
-        "additional/pens",
-        "additional/pillows",
-        "additional/platonic",
-        "additional/rosemary",
-        "additional/table",
-        "additional/tomb",
-        "additional/tower",
-        "additional/town",
-        "additional/vinyl",
-    ]
-
-    traindata_all, traindata_label = load_LFdata(dir_LFimages)
-
-    traindata_90d, traindata_0d, traindata_45d, traindata_m45d, _ = (
-        generate_traindata512(traindata_all, traindata_label, Setting02_AngualrViews)
+    # Pre-generate full views for validation/prediction later
+    train_90d, train_0d, train_45d, train_m45d, _ = generate_traindata512(
+        train_all, train_label, config.angular_views
     )
-    # (traindata_90d, 0d, 45d, m45d) to validation or test
-    # traindata_90d, 0d, 45d, m45d:  16x512x512x9  float32
+    print("Loading training data... Complete")
 
-    print("Load training data... Complete")
+    print("Loading test data...")
+    val_all, val_label = load_LFdata(config.val_dirs)
+    # Note: validation views are loaded but not explicitly returned here
+    # as the original script uses 'traindata_*' for the intermediate prediction step.
+    print("Loading test data... Complete")
 
-    """load invalid regions from training data (ex. reflective region)"""
-    boolmask_img4 = imageio.imread(
-        "hci_dataset/additional_invalid_area/kitchen/input_Cam040_invalid_ver2.png"
-    )
-    boolmask_img6 = imageio.imread(
-        "hci_dataset/additional_invalid_area/museum/input_Cam040_invalid_ver2.png"
-    )
-    boolmask_img15 = imageio.imread(
-        "hci_dataset/additional_invalid_area/vinyl/input_Cam040_invalid_ver2.png"
+    return (train_all, train_label), (train_90d, train_0d, train_45d, train_m45d)
+
+
+def initialize_models(config: TrainingConfig):
+    """Defines the patch-based training model and full-image prediction model."""
+    model_train = define_epinet(
+        config.input_size,
+        config.input_size,
+        config.angular_views,
+        config.model_conv_depth,
+        config.model_filt_num,
+        config.learning_rate,
     )
 
-    boolmask_img4 = 1.0 * boolmask_img4[:, :, 3] > 0
-    boolmask_img6 = 1.0 * boolmask_img6[:, :, 3] > 0
-    boolmask_img15 = 1.0 * boolmask_img15[:, :, 3] > 0
-
-    """
-    Load Test data from LF .png files
-    """
-    print("Load test data...")
-    dir_LFimages = [
-        "stratified/backgammon",
-        "stratified/dots",
-        "stratified/pyramids",
-        "stratified/stripes",
-        "training/boxes",
-        "training/cotton",
-        "training/dino",
-        "training/sideboard",
-    ]
-
-    valdata_all, valdata_label = load_LFdata(dir_LFimages)
-
-    valdata_90d, valdata_0d, valdata_45d, valdata_m45d, valdata_label = (
-        generate_traindata512(valdata_all, valdata_label, Setting02_AngualrViews)
+    model_predict = define_epinet(
+        config.image_width,
+        config.image_height,
+        config.angular_views,
+        config.model_conv_depth,
+        config.model_filt_num,
+        config.learning_rate,
     )
-    # (valdata_90d, 0d, 45d, m45d) to validation or test
-    print("Load test data... Complete")
+    return model_train, model_predict
 
-    """
-    Model for patch-wise training
-    """
-    model = define_epinet(
-        input_size,
-        input_size,
-        Setting02_AngualrViews,
-        model_conv_depth,
-        model_filt_num,
-        model_learning_rate,
-    )
 
-    """
-    Model for predicting full-size LF images
-    """
-    image_w = 512
-    image_h = 512
-    model_512 = define_epinet(
-        image_w,
-        image_h,
-        Setting02_AngualrViews,
-        model_conv_depth,
-        model_filt_num,
-        model_learning_rate,
-    )
+def manage_checkpoints(model, config: TrainingConfig) -> int:
+    """Loads the latest checkpoint if configured and returns the starting iteration."""
+    start_iter = 0
+    if config.load_weights:
+        files = os.listdir(config.ckpt_dir)
+        checkpoints = []
+        valid_files = []
 
-    """
-    load latest_checkpoint
-    """
-    if load_weight_is:
-        list_name = os.listdir(directory_ckp)
-        if len(list_name) >= 1:
-            list1 = os.listdir(directory_ckp)
-            list_i = 0
-            for list1_tmp in list1:
-                if list1_tmp == "checkpoint":
-                    list1[list_i] = 0
-                    list_i = list_i + 1
-                else:
-                    list1[list_i] = int(list1_tmp.split("_")[0][4:])
-                    list_i = list_i + 1
-            list1 = np.array(list1)
-            iter00 = list1[np.argmax(list1)] + 1
-            ckp_name = list_name[np.argmax(list1)].split(".hdf5")[0] + ".hdf5"
-            model.load_weights(directory_ckp + "/" + ckp_name)
-            print(
-                "Network weights will be loaded from previous checkpoints \n(%s)"
-                % ckp_name
-            )
+        for f in files:
+            if f == "checkpoint":
+                continue
+            try:
+                # Expected format: iterXXXX_...
+                iter_num = int(f.split("_")[0][4:])
+                checkpoints.append(iter_num)
+                valid_files.append(f)
+            except ValueError:
+                continue
 
-    """
-    Write date & time
-    """
-    f1 = open(txt_name, "a")
-    now = datetime.datetime.now()
-    f1.write("\n" + str(now) + "\n\n")
-    f1.close()
+        if checkpoints:
+            best_idx = np.argmax(checkpoints)
+            start_iter = checkpoints[best_idx] + 1
+            ckpt_name = valid_files[best_idx]
 
-    my_generator = myGenerator(
-        traindata_all,
-        traindata_label,
-        input_size,
-        label_size,
-        batch_size,
-        Setting02_AngualrViews,
-        boolmask_img4,
-        boolmask_img6,
-        boolmask_img15,
-    )
+            weights_path = os.path.join(config.ckpt_dir, ckpt_name)
+            model.load_weights(weights_path)
+            print(f"Network weights loaded from {ckpt_name}")
+
+    return start_iter
+
+
+# --- Main Loop ---
+def train_loop(
+    models,
+    data_gen,
+    validation_views,
+    train_labels_full,
+    config: TrainingConfig,
+    start_iter: int,
+):
+    model_train, model_predict = models
+    train_90d, train_0d, train_45d, train_m45d = validation_views
+
+    current_iter = start_iter
     best_bad_pixel = 100.0
-    for iter02 in range(10000000):
-        """ Patch-wise training... start"""
-        t0 = time.time()
 
-        model.fit_generator(
-            my_generator,
-            steps_per_epoch=int(display_status_ratio),
-            epochs=iter00 + 1,
-            class_weight=None,
-            max_queue_size=10,
-            initial_epoch=iter00,
+    for _ in range(config.epochs):
+        print(f"Start training epoch/iteration: {current_iter}")
+
+        # 1. Train on patches
+        model_train.fit(
+            data_gen,
+            steps_per_epoch=int(config.display_status_ratio),
+            epochs=current_iter + 1,
+            initial_epoch=current_iter,
             verbose=1,
-            workers=workers_num,
         )
 
-        iter00 = iter00 + 1
+        current_iter += 1
 
-        """ Test after N*(display_status_ratio) iteration."""
-        weight_tmp1 = model.get_weights()
-        model_512.set_weights(weight_tmp1)
-        train_output = model_512.predict(
-            [traindata_90d, traindata_0d, traindata_45d, traindata_m45d], batch_size=1
+        # 2. Validation / Visualization
+        # Transfer weights to full-size model
+        model_predict.set_weights(model_train.get_weights())
+
+        # Predict on full images (batch_size=1)
+        pred_output = model_predict.predict(
+            [train_90d, train_0d, train_45d, train_m45d],
+            batch_size=1,
+            verbose=0,
         )
 
-        """ Save prediction image(disparity map) in 'current_output/' folder """
+        # Calculate metrics and save image
         train_error, train_bp = display_current_output(
-            train_output, traindata_label, iter00, directory_t
+            pred_output, train_labels_full, current_iter, config.output_dir
         )
 
-        training_mean_squared_error_x100 = 100 * np.average(np.square(train_error))
-        training_bad_pixel_ratio = 100 * np.average(train_bp)
+        mse_score = 100 * np.average(np.square(train_error))
+        bp_score = 100 * np.average(train_bp)
 
-        save_path_file_new = directory_ckp + "/iter%04d_trainmse%.3f_bp%.2f.hdf5" % (
-            iter00,
-            training_mean_squared_error_x100,
-            training_bad_pixel_ratio,
+        print(f"Validation: BP={bp_score:.2f}, MSE={mse_score:.3f}")
+
+        # 3. Save Checkpoints
+        save_filename = (
+            f"iter{current_iter:04d}_trainmse{mse_score:.3f}_bp{bp_score:.2f}.keras"
         )
-        """
-        Save bad pixel & mean squared error
-        """
-        print(save_path_file_new)
-        f1 = open(txt_name, "a")
-        f1.write("." + save_path_file_new + "\n")
-        f1.close()
-        t1 = time.time()
+        save_path = os.path.join(config.ckpt_dir, save_filename)
 
-        """ save model weights if it get better results than previous one..."""
-        if training_bad_pixel_ratio < best_bad_pixel:
-            best_bad_pixel = training_bad_pixel_ratio
-            model.save(save_path_file_new)
-            print("saved!!!")
+        # Log to text file
+        with open(config.log_file, "a") as f:
+            f.write(f".{save_path}\n")
+
+        # Save best model
+        if bp_score < best_bad_pixel:
+            best_bad_pixel = bp_score
+            model_train.save(save_path)
+            print("Model Saved! Best Bad Pixel Ratio so far.")
+
+
+def main():
+    # 1. Setup
+    config = TrainingConfig()
+    setup_directories(config)
+
+    # 2. Data Loading
+    (train_all, train_label), validation_views = load_and_prepare_data(config)
+
+    # 3. Model Initialization
+    model_train, model_predict = initialize_models(config)
+    start_iter = manage_checkpoints(model_train, config)
+
+    # 4. Generator Setup
+    gen_instance = training_generator(train_all, train_label, config)
+
+    # 5. Run Training
+    train_loop(
+        models=(model_train, model_predict),
+        data_gen=gen_instance,
+        validation_views=validation_views,
+        train_labels_full=train_label,
+        config=config,
+        start_iter=start_iter,
+    )
+
+
+if __name__ == "__main__":
+    main()

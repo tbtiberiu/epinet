@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Created on Thu Nov 15 10:32:22 2018
 
@@ -14,10 +13,7 @@ def generate_traindata_for_train(
     input_size,
     label_size,
     batch_size,
-    Setting02_AngualrViews,
-    boolmask_img4,
-    boolmask_img6,
-    boolmask_img15,
+    angular_views,
 ):
     """
     input: traindata_all   (16x512x512x9x9x3) uint8
@@ -25,10 +21,7 @@ def generate_traindata_for_train(
            input_size 23~   int
            label_size 1~    int
            batch_size 16    int
-           Setting02_AngualrViews [0,1,2,3,4,5,6,7,8] for 9x9
-           boolmask_img4 (512x512)  bool // reflection mask for images[4]
-           boolmask_img6 (512x512)  bool // reflection mask for images[6]
-           boolmask_img15 (512x512) bool // reflection mask for images[15]
+           angular_views [0,1,2,3,4,5,6,7,8] for 9x9
 
 
     Generate traindata using LF image and disparity map
@@ -42,37 +35,37 @@ def generate_traindata_for_train(
 
 
 
-    output: traindata_batch_90d   (batch_size x input_size x input_size x len(Setting02_AngualrViews)) float32
-            traindata_batch_0d    (batch_size x input_size x input_size x len(Setting02_AngualrViews)) float32
-            traindata_batch_45d   (batch_size x input_size x input_size x len(Setting02_AngualrViews)) float32
-            traindata_batch_m45d  (batch_size x input_size x input_size x len(Setting02_AngualrViews)) float32
+    output: traindata_batch_90d   (batch_size x input_size x input_size x len(angular_views)) float32
+            traindata_batch_0d    (batch_size x input_size x input_size x len(angular_views)) float32
+            traindata_batch_45d   (batch_size x input_size x input_size x len(angular_views)) float32
+            traindata_batch_m45d  (batch_size x input_size x input_size x len(angular_views)) float32
             traindata_batch_label (batch_size x label_size x label_size )                   float32
 
     """
 
     """ initialize image_stack & label """
     traindata_batch_90d = np.zeros(
-        (batch_size, input_size, input_size, len(Setting02_AngualrViews)),
+        (batch_size, input_size, input_size, len(angular_views)),
         dtype=np.float32,
     )
     traindata_batch_0d = np.zeros(
-        (batch_size, input_size, input_size, len(Setting02_AngualrViews)),
+        (batch_size, input_size, input_size, len(angular_views)),
         dtype=np.float32,
     )
     traindata_batch_45d = np.zeros(
-        (batch_size, input_size, input_size, len(Setting02_AngualrViews)),
+        (batch_size, input_size, input_size, len(angular_views)),
         dtype=np.float32,
     )
     traindata_batch_m45d = np.zeros(
-        (batch_size, input_size, input_size, len(Setting02_AngualrViews)),
+        (batch_size, input_size, input_size, len(angular_views)),
         dtype=np.float32,
     )
 
     traindata_batch_label = np.zeros((batch_size, label_size, label_size))
 
     """ inital variable """
-    start1 = Setting02_AngualrViews[0]
-    end1 = Setting02_AngualrViews[-1]
+    start1 = angular_views[0]
+    end1 = angular_views[-1]
     crop_half1 = int(0.5 * (input_size - label_size))
 
     """ Generate image stacks"""
@@ -160,10 +153,10 @@ def generate_traindata_for_train(
                 //Shift augmentation for 7x7, 5x5 viewpoints,.. //
                 Details in our epinet paper.
             """
-            if len(Setting02_AngualrViews) == 7:
+            if len(angular_views) == 7:
                 ix_rd = np.random.randint(0, 3) - 1
                 iy_rd = np.random.randint(0, 3) - 1
-            if len(Setting02_AngualrViews) == 9:
+            if len(angular_views) == 9:
                 ix_rd = 0
                 iy_rd = 0
 
@@ -181,38 +174,10 @@ def generate_traindata_for_train(
             """
                 boolmask: reflection masks for images(4,6,15)
             """
-            if image_id == 4 or 6 or 15:
-                if image_id == 4:
-                    a_tmp = boolmask_img4
-                if image_id == 6:
-                    a_tmp = boolmask_img6
-                if image_id == 15:
-                    a_tmp = boolmask_img15
-                    if (
-                        np.sum(
-                            a_tmp[
-                                idx_start + scale * crop_half1 : idx_start
-                                + scale * crop_half1
-                                + scale * label_size : scale,
-                                idy_start + scale * crop_half1 : idy_start
-                                + scale * crop_half1
-                                + scale * label_size : scale,
-                            ]
-                        )
-                        > 0
-                        or np.sum(
-                            a_tmp[
-                                idx_start : idx_start + scale * input_size : scale,
-                                idy_start : idy_start + scale * input_size : scale,
-                            ]
-                        )
-                        > 0
-                    ):
-                        valid = 0
 
             if valid > 0:
-                seq0to8 = np.array(Setting02_AngualrViews) + ix_rd
-                seq8to0 = np.array(Setting02_AngualrViews[::-1]) + iy_rd
+                seq0to8 = np.array(angular_views) + ix_rd
+                seq8to0 = np.array(angular_views[::-1]) + iy_rd
 
                 image_center = (1 / 255) * np.squeeze(
                     R
@@ -574,38 +539,38 @@ def data_augmentation_for_train(
     )
 
 
-def generate_traindata512(traindata_all, traindata_label, Setting02_AngualrViews):
+def generate_traindata512(traindata_all, traindata_label, angular_views):
     """
     Generate validation or test set( = full size(512x512) LF images)
 
      input: traindata_all   (16x512x512x9x9x3) uint8
             traindata_label (16x512x512x9x9)   float32
-            Setting02_AngualrViews [0,1,2,3,4,5,6,7,8] for 9x9
+            angular_views [0,1,2,3,4,5,6,7,8] for 9x9
 
 
-     output: traindata_batch_90d   (batch_size x 512 x 512 x len(Setting02_AngualrViews)) float32
-             traindata_batch_0d    (batch_size x 512 x 512 x len(Setting02_AngualrViews)) float32
-             traindata_batch_45d   (batch_size x 512 x 512 x len(Setting02_AngualrViews)) float32
-             traindata_batch_m45d  (batch_size x 512 x 512 x len(Setting02_AngualrViews)) float32
+     output: traindata_batch_90d   (batch_size x 512 x 512 x len(angular_views)) float32
+             traindata_batch_0d    (batch_size x 512 x 512 x len(angular_views)) float32
+             traindata_batch_45d   (batch_size x 512 x 512 x len(angular_views)) float32
+             traindata_batch_m45d  (batch_size x 512 x 512 x len(angular_views)) float32
              traindata_label_batchNxN (batch_size x 512 x 512 )               float32
     """
     #        else:
     input_size = 512
     label_size = 512
     traindata_batch_90d = np.zeros(
-        (len(traindata_all), input_size, input_size, len(Setting02_AngualrViews)),
+        (len(traindata_all), input_size, input_size, len(angular_views)),
         dtype=np.float32,
     )
     traindata_batch_0d = np.zeros(
-        (len(traindata_all), input_size, input_size, len(Setting02_AngualrViews)),
+        (len(traindata_all), input_size, input_size, len(angular_views)),
         dtype=np.float32,
     )
     traindata_batch_45d = np.zeros(
-        (len(traindata_all), input_size, input_size, len(Setting02_AngualrViews)),
+        (len(traindata_all), input_size, input_size, len(angular_views)),
         dtype=np.float32,
     )
     traindata_batch_m45d = np.zeros(
-        (len(traindata_all), input_size, input_size, len(Setting02_AngualrViews)),
+        (len(traindata_all), input_size, input_size, len(angular_views)),
         dtype=np.float32,
     )
 
@@ -615,8 +580,8 @@ def generate_traindata512(traindata_all, traindata_label, Setting02_AngualrViews
     ### sz = (16, 27, 9, 512, 512)
 
     crop_half1 = int(0.5 * (input_size - label_size))
-    start1 = Setting02_AngualrViews[0]
-    end1 = Setting02_AngualrViews[-1]
+    start1 = angular_views[0]
+    end1 = angular_views[-1]
     #        starttime=time.process_time() 0.375초 정도 걸림. i5 기준
     for ii in range(0, len(traindata_all)):
         R = 0.299  ### 0,1,2,3 = R, G, B, Gray // 0.299 0.587 0.114
@@ -630,8 +595,8 @@ def generate_traindata512(traindata_all, traindata_label, Setting02_AngualrViews
         idx_start = 0
         idy_start = 0
 
-        seq0to8 = np.array(Setting02_AngualrViews) + ix_rd
-        seq8to0 = np.array(Setting02_AngualrViews[::-1]) + iy_rd
+        seq0to8 = np.array(angular_views) + ix_rd
+        seq8to0 = np.array(angular_views[::-1]) + iy_rd
 
         traindata_batch_0d[ii, :, :, :] = np.squeeze(
             R

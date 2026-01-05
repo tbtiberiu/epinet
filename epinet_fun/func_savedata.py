@@ -1,9 +1,10 @@
-# -*- coding: utf-8 -*-
 """
 Created on Fri Mar 23 16:55:17 2018
 
 @author: shinyonsei2
 """
+
+import os
 
 import imageio
 import numpy as np
@@ -39,7 +40,7 @@ def display_current_output(train_output, traindata_label, iter00, directory_save
     )
 
     imageio.imsave(
-        directory_save + "/train_iter%05d.jpg" % (iter00),
+        os.path.join(directory_save, f"val_{iter00}.jpg"),
         np.squeeze(train_output482_all),
     )
 
