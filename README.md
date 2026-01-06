@@ -19,9 +19,9 @@ Unlike the original 2018 codebase, this implementation features:
 
 ## 🛠️ Environment Setup
 
-This project uses `uv` for fast and reliable dependency management.
+This project uses `uv` for dependency management.
 
-1.  **Prerequisites:** Ensure you have Python 3.13 installed.
+1.  **Prerequisites:** Ensure you have Python 3.13 and installed.
 2.  **Install dependencies:**
     ```bash
     # Creates virtual environment and installs requirements
