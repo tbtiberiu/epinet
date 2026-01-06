@@ -17,7 +17,7 @@ Unlike the original 2018 codebase, this implementation features:
 * **Interactive Testing:** Added `EPINET_test.ipynb` for easy visualization of disparity maps using Jupyter Notebooks.
 * **Refactored Codebase:** Modularized code structure following modern PEP 8 standards.
 
-## 🛠️ Environment Setup
+## Environment Setup
 
 This project uses `uv` for dependency management.
 
@@ -28,7 +28,7 @@ This project uses `uv` for dependency management.
     uv sync
     ```
 
-## 📂 Dataset Preparation
+## Dataset Preparation
 
 1.  Download the **HCI Light Field Dataset** from the [official website](https://lightfield-analysis.uni-konstanz.de/).
 2.  Extract the dataset and organize the folders as follows inside the project root:
