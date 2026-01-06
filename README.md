@@ -1,39 +1,103 @@
-# EPINET: A Fully-Convolutional Neural Network using Epipolar Geometry for Depth from Light Field Images
-EPINET: A Fully-Convolutional Neural Network using Epipolar Geometry for Depth from Light Field Images
+# EPINET: Fully-Convolutional Neural Network for Depth from Light Field Images (TF2 / Keras 3)
 
-Changha Shin, Hae-Gon Jeon, Youngjin Yoon, In So Kweon and Seon Joo Kim
+**An updated and refactored implementation of EPINET using TensorFlow 2.x and Python 3.13.**
 
-IEEE Conference on Computer Vision and Pattern Recognition (CVPR), Jun 2018
+This repository contains a modern implementation of the paper:
+> **EPINET: A Fully-Convolutional Neural Network using Epipolar Geometry for Depth from Light Field Images**
+> Changha Shin, Hae-Gon Jeon, Youngjin Yoon, In So Kweon and Seon Joo Kim
+> *IEEE Conference on Computer Vision and Pattern Recognition (CVPR), 2018*
+> [Paper Link](https://arxiv.org/pdf/1804.02379.pdf)
 
-https://arxiv.org/pdf/1804.02379.pdf
+## Key Improvements in This Version
 
+Unlike the original 2018 codebase, this implementation features:
+* **Modern Stack:** Ported to **Python 3.13**, **TensorFlow 2.x**, and **Keras 3**.
+* **Dynamic Input Shapes:** Fixed hardcoded dimensions to support rectangular Light Field images (e.g., Lytro dataset) alongside synthetic square ones.
+* **Optimized Training:** Adjusted hyperparameters and learning rates to achieve convergence in just **3 epochs** (vs. original long training times).
+* **Interactive Testing:** Added `EPINET_test.ipynb` for easy visualization of disparity maps using Jupyter Notebooks.
+* **Refactored Codebase:** Modularized code structure following modern PEP 8 standards.
 
-Contact: changhashin@yonsei.ac.kr
+## 🛠️ Environment Setup
 
+This project uses `uv` for fast and reliable dependency management.
 
-# Environments
+1.  **Prerequisites:** Ensure you have Python 3.13 installed.
+2.  **Install dependencies:**
+    ```bash
+    # Creates virtual environment and installs requirements
+    uv sync
+    ```
 
-- Python3.5.2, Anaconda 4.2.0 (64-bit), Tensorflow 1.6.0 - 1.12.0
-- Recommended to use a virtual environment using uv (https://uv.run/):
-`uv sync`
+## 📂 Dataset Preparation
 
+1.  Download the **HCI Light Field Dataset** from the [official website](https://lightfield-analysis.uni-konstanz.de/).
+2.  Extract the dataset and organize the folders as follows inside the project root:
 
+```text
+project_root/
+├── data/
+│   └── hci_dataset/
+│       ├── additional/
+│       ├── training/
+│       ├── test/
+│       └── stratified/
+│   └── lytro/
+├── models/
+├── results/
+└── ...
+```
 
-# Train the EPINET
- First, you need to download HCI Light field dataset from http://hci-lightfield.iwr.uni-heidelberg.de/.
- Unzip the LF dataset and move 'additional/, training/, test/, stratified/ ' into the 'data/hci_dataset/'.
+## Training the Model
 
- And run `uv run EPINET_train.py`
+To train the model from scratch using the optimized settings:
 
- - Checkpoint files will be saved in 'models/checkpoints/iterXXX_XX.hdf5', it could be used for test EPINET model.
- - Training process will be saved 'results/epinet_validation/train_XX.jpg'. (XX is iteration number).
- - You might be change the setting 'learning rate','patch_size' and so on to get better result.
+```bash
+uv run EPINET_train.py
+```
+Checkpoints: Saved automatically in `./models/checkpoints/`.
 
-# Test the EPINET
+Logs: Training progress and MSE scores are logged to console and text file `./models/If_EPINET_train.txt`.
 
-Run `uv run EPINET_test.py`
+```text
+Note: The training is set to run for 3 epochs, which is sufficient to reach an MSE of ~9.7 and Loss < 1.0.
+```
 
- - To test your own trained model from `uv run EPINET_train.py`, you need to modify the line 141-142 like below
-`path_weight='models/checkpoints/iter0097_trainmse2.706_bp12.06.hdf5'`
+## Testing & Visualization
 
-Last modified date: 11/29/2018
+### Option A: Jupyter Notebook (Recommended)
+
+For an interactive experience where you can select specific images and visualize the output PFM files immediately:
+
+1. Open the notebook `EPINET_test.ipynb` in Jupyter.
+
+2. Configure the MODEL_WEIGHTS_PATH and INPUT_DIR variables in the first cell.
+
+3. Run all cells to generate and view the disparity map.
+
+### Option B: Python Script
+
+To process a batch of images via terminal:
+
+Edit `EPINET_test.py` to point to your specific checkpoint weight file:
+
+```python
+path_weight = 'epinet_checkpoints/EPINET_train_ckp/iter0002_trainmse9.728_bp38.80.keras'
+```
+
+Run the script:
+```bash
+uv run EPINET_test.py
+```
+
+Results are saved as .pfm files in `./results/`.
+
+## References
+
+If you use this code, please cite the original authors and the relevant literature:
+
+> **EPINET: A Fully-Convolutional Neural Network using Epipolar Geometry for Depth from Light Field Images**
+> Changha Shin, Hae-Gon Jeon, Youngjin Yoon, In So Kweon and Seon Joo Kim
+> *IEEE Conference on Computer Vision and Pattern Recognition (CVPR), 2018*
+> [Paper Link](https://arxiv.org/pdf/1804.02379.pdf)
+
+Original Author Contact (2018): changhashin@yonsei.ac.kr
