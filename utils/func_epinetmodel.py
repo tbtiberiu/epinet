@@ -139,7 +139,6 @@ def define_epinet(sz_input_h, sz_input_w, view_n, conv_depth, filt_num, learning
     mid_merged = concatenate([mid_90d, mid_0d, mid_45d, mid_M45d], name="mid_merged")
 
     """ Merged layer : Conv - Relu - Conv - BN - Relu """
-    # --- FIXED HERE: Calculate Height and Width separately ---
     layer2_input_h = sz_input_h - 6
     layer2_input_w = sz_input_w - 6
 
