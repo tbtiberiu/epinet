@@ -188,7 +188,7 @@ def generate_traindata_for_train(
                         4 + ix_rd,
                         4 + iy_rd,
                         0,
-                    ].astype("float32")
+                    ].astype('float32')
                     + G
                     * traindata_all[
                         image_id,
@@ -197,7 +197,7 @@ def generate_traindata_for_train(
                         4 + ix_rd,
                         4 + iy_rd,
                         1,
-                    ].astype("float32")
+                    ].astype('float32')
                     + B
                     * traindata_all[
                         image_id,
@@ -206,7 +206,7 @@ def generate_traindata_for_train(
                         4 + ix_rd,
                         4 + iy_rd,
                         2,
-                    ].astype("float32")
+                    ].astype('float32')
                 )
                 sum_diff = np.sum(
                     np.abs(
@@ -235,7 +235,7 @@ def generate_traindata_for_train(
                         4 + ix_rd,
                         seq0to8.tolist(),
                         0,
-                    ].astype("float32")
+                    ].astype('float32')
                     + G
                     * traindata_all[
                         image_id : image_id + 1,
@@ -244,7 +244,7 @@ def generate_traindata_for_train(
                         4 + ix_rd,
                         seq0to8.tolist(),
                         1,
-                    ].astype("float32")
+                    ].astype('float32')
                     + B
                     * traindata_all[
                         image_id : image_id + 1,
@@ -253,7 +253,7 @@ def generate_traindata_for_train(
                         4 + ix_rd,
                         seq0to8.tolist(),
                         2,
-                    ].astype("float32")
+                    ].astype('float32')
                 )
 
                 traindata_batch_90d[ii, :, :, :] = np.squeeze(
@@ -265,7 +265,7 @@ def generate_traindata_for_train(
                         seq8to0.tolist(),
                         4 + iy_rd,
                         0,
-                    ].astype("float32")
+                    ].astype('float32')
                     + G
                     * traindata_all[
                         image_id : image_id + 1,
@@ -274,7 +274,7 @@ def generate_traindata_for_train(
                         seq8to0.tolist(),
                         4 + iy_rd,
                         1,
-                    ].astype("float32")
+                    ].astype('float32')
                     + B
                     * traindata_all[
                         image_id : image_id + 1,
@@ -283,7 +283,7 @@ def generate_traindata_for_train(
                         seq8to0.tolist(),
                         4 + iy_rd,
                         2,
-                    ].astype("float32")
+                    ].astype('float32')
                 )
                 for kkk in range(start1, end1 + 1):
                     traindata_batch_45d[ii, :, :, kkk - start1] = np.squeeze(
@@ -295,7 +295,7 @@ def generate_traindata_for_train(
                             (8) - kkk + ix_rd,
                             kkk + iy_rd,
                             0,
-                        ].astype("float32")
+                        ].astype('float32')
                         + G
                         * traindata_all[
                             image_id : image_id + 1,
@@ -304,7 +304,7 @@ def generate_traindata_for_train(
                             (8) - kkk + ix_rd,
                             kkk + iy_rd,
                             1,
-                        ].astype("float32")
+                        ].astype('float32')
                         + B
                         * traindata_all[
                             image_id : image_id + 1,
@@ -313,7 +313,7 @@ def generate_traindata_for_train(
                             (8) - kkk + ix_rd,
                             kkk + iy_rd,
                             2,
-                        ].astype("float32")
+                        ].astype('float32')
                     )
 
                     traindata_batch_m45d[ii, :, :, kkk - start1] = np.squeeze(
@@ -325,7 +325,7 @@ def generate_traindata_for_train(
                             kkk + ix_rd,
                             kkk + iy_rd,
                             0,
-                        ].astype("float32")
+                        ].astype('float32')
                         + G
                         * traindata_all[
                             image_id : image_id + 1,
@@ -334,7 +334,7 @@ def generate_traindata_for_train(
                             kkk + ix_rd,
                             kkk + iy_rd,
                             1,
-                        ].astype("float32")
+                        ].astype('float32')
                         + B
                         * traindata_all[
                             image_id : image_id + 1,
@@ -343,7 +343,7 @@ def generate_traindata_for_train(
                             kkk + ix_rd,
                             kkk + iy_rd,
                             2,
-                        ].astype("float32")
+                        ].astype('float32')
                     )
                 """
                  traindata_batch_label  <-- scale_factor*traindata_label[random_index, scaled_label_size, scaled_label_size]
@@ -607,7 +607,7 @@ def generate_traindata512(traindata_all, traindata_label, angular_views):
                 4 + ix_rd,
                 seq0to8,
                 0,
-            ].astype("float32")
+            ].astype('float32')
             + G
             * traindata_all[
                 image_id : image_id + 1,
@@ -616,7 +616,7 @@ def generate_traindata512(traindata_all, traindata_label, angular_views):
                 4 + ix_rd,
                 seq0to8,
                 1,
-            ].astype("float32")
+            ].astype('float32')
             + B
             * traindata_all[
                 image_id : image_id + 1,
@@ -625,7 +625,7 @@ def generate_traindata512(traindata_all, traindata_label, angular_views):
                 4 + ix_rd,
                 seq0to8,
                 2,
-            ].astype("float32")
+            ].astype('float32')
         )
 
         traindata_batch_90d[ii, :, :, :] = np.squeeze(
@@ -637,7 +637,7 @@ def generate_traindata512(traindata_all, traindata_label, angular_views):
                 seq8to0,
                 4 + iy_rd,
                 0,
-            ].astype("float32")
+            ].astype('float32')
             + G
             * traindata_all[
                 image_id : image_id + 1,
@@ -646,7 +646,7 @@ def generate_traindata512(traindata_all, traindata_label, angular_views):
                 seq8to0,
                 4 + iy_rd,
                 1,
-            ].astype("float32")
+            ].astype('float32')
             + B
             * traindata_all[
                 image_id : image_id + 1,
@@ -655,7 +655,7 @@ def generate_traindata512(traindata_all, traindata_label, angular_views):
                 seq8to0,
                 4 + iy_rd,
                 2,
-            ].astype("float32")
+            ].astype('float32')
         )
         for kkk in range(start1, end1 + 1):
             traindata_batch_45d[ii, :, :, kkk - start1] = np.squeeze(
@@ -667,7 +667,7 @@ def generate_traindata512(traindata_all, traindata_label, angular_views):
                     (8) - kkk + ix_rd,
                     kkk + iy_rd,
                     0,
-                ].astype("float32")
+                ].astype('float32')
                 + G
                 * traindata_all[
                     image_id : image_id + 1,
@@ -676,7 +676,7 @@ def generate_traindata512(traindata_all, traindata_label, angular_views):
                     (8) - kkk + ix_rd,
                     kkk + iy_rd,
                     1,
-                ].astype("float32")
+                ].astype('float32')
                 + B
                 * traindata_all[
                     image_id : image_id + 1,
@@ -685,7 +685,7 @@ def generate_traindata512(traindata_all, traindata_label, angular_views):
                     (8) - kkk + ix_rd,
                     kkk + iy_rd,
                     2,
-                ].astype("float32")
+                ].astype('float32')
             )
 
             traindata_batch_m45d[ii, :, :, kkk - start1] = np.squeeze(
@@ -697,7 +697,7 @@ def generate_traindata512(traindata_all, traindata_label, angular_views):
                     kkk + ix_rd,
                     kkk + iy_rd,
                     0,
-                ].astype("float32")
+                ].astype('float32')
                 + G
                 * traindata_all[
                     image_id : image_id + 1,
@@ -706,7 +706,7 @@ def generate_traindata512(traindata_all, traindata_label, angular_views):
                     kkk + ix_rd,
                     kkk + iy_rd,
                     1,
-                ].astype("float32")
+                ].astype('float32')
                 + B
                 * traindata_all[
                     image_id : image_id + 1,
@@ -715,7 +715,7 @@ def generate_traindata512(traindata_all, traindata_label, angular_views):
                     kkk + ix_rd,
                     kkk + iy_rd,
                     2,
-                ].astype("float32")
+                ].astype('float32')
             )
             if len(traindata_all) >= 12 and traindata_label.shape[-1] == 9:
                 traindata_label_batchNxN[ii, :, :] = traindata_label[

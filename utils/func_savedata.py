@@ -40,7 +40,7 @@ def display_current_output(train_output, traindata_label, iter00, directory_save
     )
 
     imageio.imsave(
-        os.path.join(directory_save, f"val_{iter00}.jpg"),
+        os.path.join(directory_save, f'val_{iter00}.jpg'),
         np.squeeze(train_output482_all),
     )
 

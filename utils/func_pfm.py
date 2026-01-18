@@ -43,7 +43,7 @@ import numpy as np
 ############################################################################
 
 
-def write_pfm(data, fpath, scale=1, file_identifier=b"Pf", dtype="float32"):
+def write_pfm(data, fpath, scale=1, file_identifier=b'Pf', dtype='float32'):
     # PFM format definition: http://netpbm.sourceforge.net/doc/pfm.html
 
     data = np.flipud(data)
@@ -52,28 +52,28 @@ def write_pfm(data, fpath, scale=1, file_identifier=b"Pf", dtype="float32"):
     endianess = data.dtype.byteorder
     print(endianess)
 
-    if endianess == "<" or (endianess == "=" and sys.byteorder == "little"):
+    if endianess == '<' or (endianess == '=' and sys.byteorder == 'little'):
         scale *= -1
 
-    with open(fpath, "wb") as file:
+    with open(fpath, 'wb') as file:
         file.write((file_identifier))
-        file.write(("\n%d %d\n" % (width, height)).encode())
-        file.write(("%d\n" % scale).encode())
+        file.write(('\n%d %d\n' % (width, height)).encode())
+        file.write(('%d\n' % scale).encode())
 
         file.write(values)
 
 
-def read_pfm(fpath, expected_identifier="Pf"):
+def read_pfm(fpath, expected_identifier='Pf'):
     # PFM format definition: http://netpbm.sourceforge.net/doc/pfm.html
 
     def _get_next_line(f):
-        next_line = f.readline().decode("utf-8").rstrip()
+        next_line = f.readline().decode('utf-8').rstrip()
         # ignore comments
-        while next_line.startswith("#"):
+        while next_line.startswith('#'):
             next_line = f.readline().rstrip()
         return next_line
 
-    with open(fpath, "rb") as f:
+    with open(fpath, 'rb') as f:
         #  header
         identifier = _get_next_line(f)
         if identifier != expected_identifier:
@@ -84,7 +84,7 @@ def read_pfm(fpath, expected_identifier="Pf"):
 
         try:
             line_dimensions = _get_next_line(f)
-            dimensions = line_dimensions.split(" ")
+            dimensions = line_dimensions.split(' ')
             width = int(dimensions[0].strip())
             height = int(dimensions[1].strip())
         except:
@@ -98,24 +98,24 @@ def read_pfm(fpath, expected_identifier="Pf"):
             scale = float(line_scale)
             assert scale != 0
             if scale < 0:
-                endianness = "<"
+                endianness = '<'
             else:
-                endianness = ">"
+                endianness = '>'
         except:
             raise Exception(
                 'Could not parse max value / endianess information: "%s". '
-                "Should be a non-zero number." % line_scale
+                'Should be a non-zero number.' % line_scale
             )
 
         try:
-            data = np.fromfile(f, "%sf" % endianness)
+            data = np.fromfile(f, '%sf' % endianness)
             data = np.reshape(data, (height, width))
             data = np.flipud(data)
-            with np.errstate(invalid="ignore"):
+            with np.errstate(invalid='ignore'):
                 data *= abs(scale)
         except:
             raise Exception(
-                "Invalid binary values. Could not create %dx%d array from input."
+                'Invalid binary values. Could not create %dx%d array from input.'
                 % (height, width)
             )
 

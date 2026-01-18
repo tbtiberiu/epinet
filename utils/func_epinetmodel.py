@@ -28,8 +28,8 @@ def layer1_multistream(input_dim1, input_dim2, input_dim3, filt_num):
                     int(filt_num),
                     (2, 2),
                     input_shape=(input_dim1, input_dim2, input_dim3),
-                    padding="valid",
-                    name="S1_c1%d" % (i),
+                    padding='valid',
+                    name='S1_c1%d' % (i),
                 )
             )
         else:
@@ -37,15 +37,15 @@ def layer1_multistream(input_dim1, input_dim2, input_dim3, filt_num):
                 Conv2D(
                     int(filt_num),
                     (2, 2),
-                    padding="valid",
-                    name="S1_c1%d" % (i),
+                    padding='valid',
+                    name='S1_c1%d' % (i),
                 )
             )
 
-        seq.add(Activation("relu", name="S1_relu1%d" % (i)))
-        seq.add(Conv2D(int(filt_num), (2, 2), padding="valid", name="S1_c2%d" % (i)))
-        seq.add(BatchNormalization(axis=-1, name="S1_BN%d" % (i)))
-        seq.add(Activation("relu", name="S1_relu2%d" % (i)))
+        seq.add(Activation('relu', name='S1_relu1%d' % (i)))
+        seq.add(Conv2D(int(filt_num), (2, 2), padding='valid', name='S1_c2%d' % (i)))
+        seq.add(BatchNormalization(axis=-1, name='S1_BN%d' % (i)))
+        seq.add(Activation('relu', name='S1_relu2%d' % (i)))
 
     seq.add(Reshape((input_dim1 - 6, input_dim2 - 6, int(filt_num))))
 
@@ -62,9 +62,9 @@ def layer2_merged(input_dim1, input_dim2, input_dim3, filt_num, conv_depth):
                 Conv2D(
                     filt_num,
                     (2, 2),
-                    padding="valid",
+                    padding='valid',
                     input_shape=(input_dim1, input_dim2, input_dim3),
-                    name="S2_c1%d" % (i),
+                    name='S2_c1%d' % (i),
                 )
             )
         else:
@@ -72,15 +72,15 @@ def layer2_merged(input_dim1, input_dim2, input_dim3, filt_num, conv_depth):
                 Conv2D(
                     filt_num,
                     (2, 2),
-                    padding="valid",
-                    name="S2_c1%d" % (i),
+                    padding='valid',
+                    name='S2_c1%d' % (i),
                 )
             )
 
-        seq.add(Activation("relu", name="S2_relu1%d" % (i)))
-        seq.add(Conv2D(filt_num, (2, 2), padding="valid", name="S2_c2%d" % (i)))
-        seq.add(BatchNormalization(axis=-1, name="S2_BN%d" % (i)))
-        seq.add(Activation("relu", name="S2_relu2%d" % (i)))
+        seq.add(Activation('relu', name='S2_relu1%d' % (i)))
+        seq.add(Conv2D(filt_num, (2, 2), padding='valid', name='S2_c2%d' % (i)))
+        seq.add(BatchNormalization(axis=-1, name='S2_BN%d' % (i)))
+        seq.add(Activation('relu', name='S2_relu2%d' % (i)))
 
     return seq
 
@@ -94,14 +94,14 @@ def layer3_last(input_dim1, input_dim2, input_dim3, filt_num):
             Conv2D(
                 filt_num,
                 (2, 2),
-                padding="valid",
+                padding='valid',
                 input_shape=(input_dim1, input_dim2, input_dim3),
-                name="S3_c1%d" % (i),
+                name='S3_c1%d' % (i),
             )
         )
-        seq.add(Activation("relu", name="S3_relu1%d" % (i)))
+        seq.add(Activation('relu', name='S3_relu1%d' % (i)))
 
-    seq.add(Conv2D(1, (2, 2), padding="valid", name="S3_last"))
+    seq.add(Conv2D(1, (2, 2), padding='valid', name='S3_last'))
 
     return seq
 
@@ -109,16 +109,16 @@ def layer3_last(input_dim1, input_dim2, input_dim3, filt_num):
 def define_epinet(sz_input_h, sz_input_w, view_n, conv_depth, filt_num, learning_rate):
     """4-Input : Conv - Relu - Conv - BN - Relu"""
     input_stack_90d = Input(
-        shape=(sz_input_h, sz_input_w, len(view_n)), name="input_stack_90d"
+        shape=(sz_input_h, sz_input_w, len(view_n)), name='input_stack_90d'
     )
     input_stack_0d = Input(
-        shape=(sz_input_h, sz_input_w, len(view_n)), name="input_stack_0d"
+        shape=(sz_input_h, sz_input_w, len(view_n)), name='input_stack_0d'
     )
     input_stack_45d = Input(
-        shape=(sz_input_h, sz_input_w, len(view_n)), name="input_stack_45d"
+        shape=(sz_input_h, sz_input_w, len(view_n)), name='input_stack_45d'
     )
     input_stack_M45d = Input(
-        shape=(sz_input_h, sz_input_w, len(view_n)), name="input_stack_M45d"
+        shape=(sz_input_h, sz_input_w, len(view_n)), name='input_stack_M45d'
     )
 
     """ 4-Stream layer : Conv - Relu - Conv - BN - Relu """
@@ -136,7 +136,7 @@ def define_epinet(sz_input_h, sz_input_w, view_n, conv_depth, filt_num, learning
     )
 
     """ Merge layers """
-    mid_merged = concatenate([mid_90d, mid_0d, mid_45d, mid_M45d], name="mid_merged")
+    mid_merged = concatenate([mid_90d, mid_0d, mid_45d, mid_M45d], name='mid_merged')
 
     """ Merged layer : Conv - Relu - Conv - BN - Relu """
     layer2_input_h = sz_input_h - 6
@@ -166,7 +166,7 @@ def define_epinet(sz_input_h, sz_input_w, view_n, conv_depth, filt_num, learning
         outputs=[output],
     )
     opt = RMSprop(learning_rate=learning_rate)
-    model_512.compile(optimizer=opt, loss="mae")
+    model_512.compile(optimizer=opt, loss='mae')
     model_512.summary()
 
     return model_512
